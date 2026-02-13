@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -15,6 +16,8 @@ async def call_claude(prompt: str, model: str = "sonnet") -> str | None:
     """Call Claude CLI with the given prompt. Returns result or None on failure."""
     process = None
     try:
+        # Remove CLAUDECODE env var to avoid nested session error
+        env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
         process = await asyncio.create_subprocess_exec(
             "claude",
             "-p",
@@ -23,6 +26,7 @@ async def call_claude(prompt: str, model: str = "sonnet") -> str | None:
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            env=env,
         )
 
         stdout, stderr = await asyncio.wait_for(
